@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My LinkedIn Network Visualization</title>
-  <link rel="stylesheet" href="style.css">
- <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <!-- Load Plotly FIRST -->
+  <script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+  <!-- Then load PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
-  <h1>My Professional Network at a Glance</h1>
-  <input type="file" id="csvFile" accept=".csv" />
-  <div id="chart"></div>
-  <footer>built by me with love&reg;</footer>
-  <script src="script.js"></script>
+  <!-- Your content -->
+  <script src="script.js"></script> <!-- Your custom JS LAST -->
 </body>
 </html>
