@@ -1,32 +1,31 @@
-// Helper: Parse CSV to Array of Objects - Improved version
+function capitalizeWords(str) {
+  return str.replace(/\w\S*/g, function(txt){
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}
+
+// Robust CSV parser for two-column CSVs
 function parseCSV(text) {
-  // Detect delimiter (comma or semicolon)
-  const delimiter = text.includes(';') && !text.includes(',') ? ';' : ',';
   const lines = text.split('\n').filter(line => line.trim() !== '');
-  const headers = lines[0].split(delimiter).map(h => h.trim().replace(/"/g, ''));
-  
-  console.log("CSV Headers:", headers);
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   const rows = lines.slice(1);
 
   return rows.map(row => {
-    // Handle quoted fields properly
+    // Handle quoted fields and commas inside quotes
     const values = [];
-    let inQuotes = false;
-    let currentValue = '';
-    
+    let inQuotes = false, value = '';
     for (let i = 0; i < row.length; i++) {
       const char = row[i];
       if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (char === delimiter && !inQuotes) {
-        values.push(currentValue);
-        currentValue = '';
+      } else if (char === ',' && !inQuotes) {
+        values.push(value);
+        value = '';
       } else {
-        currentValue += char;
+        value += char;
       }
     }
-    values.push(currentValue);
-    
+    values.push(value);
     return headers.reduce((obj, header, i) => {
       obj[header] = (values[i] || '').replace(/^"|"$/g, '').trim();
       return obj;
@@ -34,15 +33,8 @@ function parseCSV(text) {
   });
 }
 
-// Helper function to capitalize words nicely
-function capitalizeWords(str) {
-  return str.replace(/\w\S*/g, function(txt){
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
-}
-
 function buildTreemapData(data) {
-  // Find the correct columns, ignoring case and spaces
+  // Find columns, ignoring case and spaces
   const companyCol = Object.keys(data[0]).find(
     k => k.replace(/\s+/g, '').toLowerCase() === 'company'
   );
@@ -90,34 +82,33 @@ function buildTreemapData(data) {
   return { labels, parents, values };
 }
 
-// Handle CSV Upload
 document.getElementById('csvFile').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  
   const reader = new FileReader();
   reader.onload = function(evt) {
-    try {
-      const data = parseCSV(evt.target.result);
-      console.log("Sample data:", data[0]);
-      
-      const treemap = buildTreemapData(data);
-      
-      Plotly.newPlot('chart', [{
-        type: "treemap",
-        labels: treemap.labels,
-        parents: treemap.parents,
-        values: treemap.values,
-        textinfo: "label+value+percent parent+percent entry",
-        hoverinfo: "label+value+percent parent+percent entry",
-        marker: { colors: ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc949','#af7aa1','#ff9da7','#9c755f','#bab0ab'] }
-      }], {
-        margin: { t: 50, l: 10, r: 10, b: 10 }
-      });
-    } catch (error) {
-      console.error("Error processing CSV:", error);
-      alert("Error processing CSV. Check console for details.");
+    const text = evt.target.result;
+    const data = parseCSV(text);
+    if (!data.length) {
+      alert("CSV file is empty or not formatted correctly.");
+      return;
     }
+    const treemap = buildTreemapData(data);
+    if (treemap.labels.length < 2) {
+      alert("No valid data found in CSV.");
+      return;
+    }
+    Plotly.newPlot('chart', [{
+      type: "treemap",
+      labels: treemap.labels,
+      parents: treemap.parents,
+      values: treemap.values,
+      textinfo: "label+value+percent parent+percent entry",
+      hoverinfo: "label+value+percent parent+percent entry",
+      marker: { colors: ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc949','#af7aa1','#ff9da7','#9c755f','#bab0ab'] }
+    }], {
+      margin: { t: 50, l: 10, r: 10, b: 10 }
+    });
   };
   reader.readAsText(file);
 });
